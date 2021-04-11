@@ -494,11 +494,18 @@ class Buzzard():
         return out
 
 
-    def create_v6_footprint(self):
+    def create_v6_footprint(self, parm_text=None):
         
         out = "(footprint \"buzzardLabel\"\n" + \
             " (layer \"F.Cu\")\n" + \
             " (attr board_only exclude_from_pos_files exclude_from_bom)\n"
+
+        if parm_text is not None:
+            out += " (fp_text user \"kb_params="
+            out += parm_text
+            out += "\" (at 0 0 unlocked) (layer \"Cmts.User\") hide" + \
+                    "  (effects (font (size 0.2 0.2) (thickness 0.05)))" + \
+                    " )"
 
         for poly in self.polys:
 

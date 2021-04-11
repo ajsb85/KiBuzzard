@@ -37,7 +37,8 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
 
 
         self.buzzard = buzzard
-        self.sourceText = ""
+        self.label_params = {}
+
         self.polys = []
         
         self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -64,13 +65,18 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
         self.config.WriteFloat('scale', float(self.scaleSpinCtrl.GetValue()))
         
     def CurrentSettings(self):
-        return str(self.m_MultiLineText.GetValue()) + str(self.m_SizeYCtrl.GetValue()) + str(self.m_FontComboBox.GetStringSelection()) + \
-            self.m_JustifyChoice1.GetStringSelection() + self.m_JustifyChoice.GetStringSelection()
+        return {
+            'text':str(self.m_MultiLineText.GetValue()),
+            'sizeY':str(self.m_SizeYCtrl.GetValue()),
+            'font':str(self.m_FontComboBox.GetStringSelection()),
+            'l-cap':self.m_JustifyChoice1.GetStringSelection(),
+            'r-cap':self.m_JustifyChoice.GetStringSelection()
+        }
 
     def labelEditOnText( self, event ):
 
-        while self.sourceText != self.CurrentSettings():
-            self.sourceText = self.CurrentSettings()
+        while self.label_params != self.CurrentSettings():
+            self.label_params.update(self.CurrentSettings())
             self.ReGeneratePreview()
 
         self.timer.Start(milliseconds=250, oneShot=True)
@@ -81,7 +87,7 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
 
     def ReGeneratePreview(self, e=None):
         self.polys = []
-        self.buzzard.fontName = self.m_FontComboBox.GetStringSelection()
+        self.buzzard.fontName = self.label_params['font']
 
         # Validate scale factor
         scale = 0.04
@@ -94,14 +100,12 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
         
 
         styles = {'':'', '(':'round', '[':'square', '<':'pointer', '/':'fslash', '\\':'bslash', '>':'flagtail'}
-        self.buzzard.leftCap = styles[self.m_JustifyChoice1.GetStringSelection()]
+        self.buzzard.leftCap = styles[self.label_params['l-cap']]
 
         styles = {'':'', ')':'round', ']':'square', '>':'pointer', '/':'fslash', '\\':'bslash', '<':'flagtail'}
-        self.buzzard.rightCap = styles[self.m_JustifyChoice.GetStringSelection()]
-
+        self.buzzard.rightCap = styles[self.label_params['r-cap']]
 
         try:
-
             self.polys = self.buzzard.generate(self.m_MultiLineText.GetValue())
         except Exception as e:
             import traceback
@@ -152,4 +156,5 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
     def OnOkClick(self, event):
         self.timer.Stop()
 
+        print(str(self.label_params))
         self.func(self, self.buzzard)

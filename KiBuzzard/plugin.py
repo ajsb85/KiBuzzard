@@ -69,7 +69,7 @@ class KiBuzzardPlugin(pcbnew.ActionPlugin, object):
                 #pcbnew.WindowZoom(b.GetX(), b.GetY(), b.GetWidth(), b.GetHeight())
 
             elif '5.99' in self.kicad_build_version or '6.0' in self.kicad_build_version:
-                footprint_string = p_buzzard.create_v6_footprint()
+                footprint_string = p_buzzard.create_v6_footprint(parm_text=str(dlg.label_params))
 
 
                 if wx.TheClipboard.Open():
