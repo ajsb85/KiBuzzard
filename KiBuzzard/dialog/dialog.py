@@ -4,8 +4,10 @@ import re
 import copy
 
 import wx
+import json
 
 from . import dialog_text_base
+
 
 class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
     def __init__(self, parent, config, buzzard, func):
@@ -32,12 +34,13 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
         self.SetClientSize(best_size)
         self.config = config
         self.func = func
-        
+        self.label_params = {}
+
+
         self.loadConfig()
 
 
         self.buzzard = buzzard
-        self.label_params = {}
 
         self.polys = []
         
@@ -55,6 +58,32 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
 
 
     def loadConfig(self):
+        # check if we have a footprint we can load value from first
+        try:
+            import pcbnew
+            b = pcbnew.GetBoard()
+            for f in [f for f in b.Footprints() if f.IsSelected()]:
+                if f.GetValue().startswith("kb_params="):
+                    json_str = f.GetValue()[10:].replace("'", '"')
+                    params = json.loads(json_str)
+
+                    if 'text' in params:
+                        self.m_MultiLineText.SetValue(params['text'])
+                    if 'sizeY' in params:
+                        self.m_SizeYCtrl.SetValue(params['sizeY'])
+                    if 'font' in params:
+                        self.m_FontComboBox.SetStringSelection(params['font'])
+                    if 'l-cap' in params:
+                        self.m_JustifyChoice1.SetStringSelection(params['l-cap'])
+                    if 'r-cap' in params:
+                        self.m_JustifyChoice.SetStringSelection(params['r-cap'])
+                    
+                    return
+                
+        except:
+            import traceback
+            wx.LogError(traceback.format_exc())
+
         self.config.SetPath('/')
         self.m_FontComboBox.SetStringSelection(self.config.Read('font', 'FredokaOne'))
         self.m_SizeYCtrl.SetValue(str(self.config.ReadFloat('scale', 1.0)))
@@ -107,7 +136,7 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
 
         try:
             self.polys = self.buzzard.generate(self.m_MultiLineText.GetValue())
-        except Exception as e:
+        except:
             import traceback
             wx.LogError(traceback.format_exc())
 
@@ -155,6 +184,7 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
         
     def OnOkClick(self, event):
         self.timer.Stop()
+        json_str = json.dumps(self.label_params, sort_keys=True)
+        print(json_str)
 
-        print(str(self.label_params))
         self.func(self, self.buzzard)

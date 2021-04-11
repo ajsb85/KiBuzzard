@@ -7,6 +7,7 @@ import wx.aui
 from wx import FileConfig
 
 import pcbnew
+import json
 from .dialog import Dialog
 
 from .buzzard.buzzard import Buzzard
@@ -69,7 +70,8 @@ class KiBuzzardPlugin(pcbnew.ActionPlugin, object):
                 #pcbnew.WindowZoom(b.GetX(), b.GetY(), b.GetWidth(), b.GetHeight())
 
             elif '5.99' in self.kicad_build_version or '6.0' in self.kicad_build_version:
-                footprint_string = p_buzzard.create_v6_footprint(parm_text=str(dlg.label_params))
+                json_str = json.dumps(dlg.label_params, sort_keys=True).replace('"', "'")
+                footprint_string = p_buzzard.create_v6_footprint(parm_text=json_str)
 
 
                 if wx.TheClipboard.Open():
