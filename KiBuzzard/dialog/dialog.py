@@ -35,6 +35,7 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
         self.config = config
         self.func = func
         self.label_params = {}
+        self.updateFootprint = None
 
 
         self.loadConfig()
@@ -78,6 +79,8 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
                     if 'r-cap' in params:
                         self.m_JustifyChoice.SetStringSelection(params['r-cap'])
                     
+                    self.updateFootprint = f
+
                     return
                 
         except:
@@ -184,7 +187,5 @@ class Dialog(dialog_text_base.DIALOG_TEXT_BASE):
         
     def OnOkClick(self, event):
         self.timer.Stop()
-        json_str = json.dumps(self.label_params, sort_keys=True)
-        print(json_str)
-
+        
         self.func(self, self.buzzard)

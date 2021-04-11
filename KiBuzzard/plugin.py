@@ -74,9 +74,34 @@ class KiBuzzardPlugin(pcbnew.ActionPlugin, object):
                 footprint_string = p_buzzard.create_v6_footprint(parm_text=json_str)
 
 
-                if wx.TheClipboard.Open():
-                    wx.TheClipboard.SetData(wx.TextDataObject(footprint_string))
-                    wx.TheClipboard.Close()
+                if dlg.updateFootprint is None:
+                    # New footprint
+                    if wx.TheClipboard.Open():
+                        wx.TheClipboard.SetData(wx.TextDataObject(footprint_string))
+                        wx.TheClipboard.Close()
+                else:
+                    # Create new footprint, and replace old ones place
+                    try:
+                        pos = dlg.updateFootprint.GetPosition()
+
+                        io = pcbnew.PCB_IO()
+                        new_fp = pcbnew.Cast_to_FOOTPRINT(io.Parse(footprint_string))
+
+                        b = pcbnew.GetBoard()
+                        new_fp.SetPosition(pos)
+
+                        dlg.updateFootprint.GraphicalItems().clear()
+                        for item in list(new_fp.GraphicalItems()):
+                            dlg.updateFootprint.GraphicalItems().push_back(item)
+
+                        dlg.updateFootprint.SetValue("kb_params=" + json_str)
+
+                        pcbnew.Refresh()
+                    except:
+                        import traceback
+                        wx.LogError(traceback.format_exc())
+                    
+                
                     
             dlg.EndModal(wx.ID_OK)
 
@@ -85,12 +110,13 @@ class KiBuzzardPlugin(pcbnew.ActionPlugin, object):
             if dlg.ShowModal() == wx.ID_OK:
                 
                 if '5.99' in self.kicad_build_version:
-                    if self._pcbnew_frame is not None:
-                        # Set focus to main window and attempt to execute a Paste operation
-                        self._pcbnew_frame.Raise()
-                        wx.Yield()
-                        keyinput = wx.UIActionSimulator()
-                        keyinput.Char(ord("V"), wx.MOD_CONTROL)    
+                    if dlg.updateFootprint is None:
+                        if self._pcbnew_frame is not None:
+                            # Set focus to main window and attempt to execute a Paste operation
+                            self._pcbnew_frame.Raise()
+                            wx.Yield()
+                            keyinput = wx.UIActionSimulator()
+                            keyinput.Char(ord("V"), wx.MOD_CONTROL)    
         except Exception as e:
             print(e)
         
